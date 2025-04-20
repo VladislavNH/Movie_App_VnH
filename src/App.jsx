@@ -1,57 +1,49 @@
-import React, { useEffect, useState } from 'react'
-import { Layout, Input, Spin, Alert } from 'antd'
+// src/App.jsx
+import React from 'react'
+import { Layout, Tabs, Empty } from 'antd'
 
-import { searchMovies } from './api'
-import MovieList from './components/MovieList'
+import { useMovies } from './hooks/useMovie'
+import SearchBar from './components/SearchBar'
+import MoviesGrid from './components/MovieGrid'
+import PaginationControl from './components/Pagination'
 
-const { Header, Content } = Layout
-const { Search } = Input
+const { Content } = Layout
+const { TabPane } = Tabs
 
 export default function App() {
-  const [movies, setMovies] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-
-  const handleSearch = (raw) => {
-    const term = raw.trim() || 'return'
-    setLoading(true)
-    setError('')
-
-    searchMovies(term)
-      .then((data) => setMovies(data.results))
-      .catch(() => setError('Ошибка при загрузке фильмов'))
-      .finally(() => setLoading(false))
-  }
-
-  useEffect(() => {
-    handleSearch('return')
-  }, [])
+  const {
+    query,
+    movies,
+    loading,
+    error,
+    page,
+    totalResults,
+    onSearchChange,
+    onPageChange,
+  } = useMovies()
 
   return (
     <Layout>
-      <Header style={{ background: '#fff', padding: '16px 24px' }}>
-        <Search
-          placeholder="Поиск фильмов"
-          defaultValue="return"
-          enterButton="Поиск"
-          size="large"
-          onSearch={handleSearch}
-        />
-      </Header>
+      <Content style={{ background: '#fff', padding: '16px 24px' }}>
+        <Tabs defaultActiveKey="1" centered>
+          <TabPane tab="Search" key="1">
+            <SearchBar value={query} onChange={onSearchChange} />
 
-      <Content style={{ background: '#f0f2f5', padding: '24px 0' }}>
-        <div className="container">
-          {loading ? (
-            <Spin
-              tip="Загрузка..."
-              style={{ display: 'block', margin: '100px auto' }}
-            />
-          ) : error ? (
-            <Alert message={error} type="error" style={{ marginBottom: 24 }} />
-          ) : (
-            <MovieList movies={movies} />
-          )}
-        </div>
+            <MoviesGrid loading={loading} error={error} movies={movies} />
+
+            {!loading && !error && movies.length > 0 && (
+              <PaginationControl
+                page={page}
+                total={totalResults}
+                onChange={onPageChange}
+              />
+            )}
+          </TabPane>
+
+          <TabPane tab="Rated" key="2">
+            <Empty description="Здесь будут ваши оценки" />
+          </TabPane>
+        </Tabs>
       </Content>
     </Layout>
   )
