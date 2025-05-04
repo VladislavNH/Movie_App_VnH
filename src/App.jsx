@@ -1,11 +1,11 @@
-// src/App.jsx
 import React from 'react'
-import { Layout, Tabs, Empty } from 'antd'
+import { Layout, Tabs } from 'antd'
 
 import { useMovies } from './hooks/useMovie'
 import SearchBar from './components/SearchBar'
 import MoviesGrid from './components/MovieGrid'
 import PaginationControl from './components/Pagination'
+import RatedTab from './components/Rated/RatedTab'
 
 const { Content } = Layout
 const { TabPane } = Tabs
@@ -41,7 +41,7 @@ export default function App() {
           </TabPane>
 
           <TabPane tab="Rated" key="2">
-            <Empty description="Здесь будут ваши оценки" />
+            <RatedTab />
           </TabPane>
         </Tabs>
       </Content>

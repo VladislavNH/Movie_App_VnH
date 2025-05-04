@@ -1,56 +1,56 @@
 import { useState, useEffect, useCallback } from 'react'
 import debounce from 'lodash.debounce'
 
-import { searchMovies } from '../api'
+import { searchMoviesWithRating } from '../api'
 
-export function useMovies(initialQuery = 'return') {
+export function useMovies(initialQuery = 'Naruto') {
   const [query, setQuery] = useState(initialQuery)
-  const [movies, setMovies] = useState([])
   const [page, setPage] = useState(1)
+  const [movies, setMovies] = useState([])
   const [totalResults, setTotal] = useState(0)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const fetch = useCallback((q, p = 1) => {
-    setLoading(true)
-    setError('')
-    searchMovies(q, p)
-      .then(({ results, total_results }) => {
-        setMovies(results)
-        setTotal(total_results)
-      })
-      .catch((err) => {
-        console.error(err)
-        setError(
-          navigator.onLine
-            ? 'Не удалось загрузить фильмы. Попробуйте ещё раз'
-            : 'Похоже, вы оффлайн. Проверьте подключение к интернету'
-        )
-      })
-      .finally(() => setLoading(false))
-  }, [])
+  const guestSessionId = localStorage.getItem('tmdb_guest_session')
 
-  const debouncedFetch = useCallback(
-    debounce((v) => {
-      setPage(1)
-      fetch(v || initialQuery, 1)
-    }, 500),
-    [fetch, initialQuery]
+  const fetchPage = useCallback(
+    (q, p = 1) => {
+      setLoading(true)
+      setError('')
+      searchMoviesWithRating(q, guestSessionId, p)
+        .then(({ results, totalResults }) => {
+          setMovies(results)
+          setTotal(totalResults)
+        })
+        .catch((err) => {
+          console.error(err)
+          setError(
+            navigator.onLine
+              ? 'Не удалось загрузить фильмы. Попробуйте ещё раз.'
+              : 'Похоже, вы офлайн. Проверьте подключение.'
+          )
+        })
+        .finally(() => setLoading(false))
+    },
+    [guestSessionId]
   )
 
-  useEffect(() => {
-    fetch(initialQuery, 1)
-    return () => debouncedFetch.cancel()
-  }, [fetch, debouncedFetch, initialQuery])
+  const debouncedFetch = useCallback(debounce(fetchPage, 500), [fetchPage])
 
-  const onSearchChange = (v) => {
+  useEffect(() => {
+    fetchPage(initialQuery, 1)
+    return () => debouncedFetch.cancel()
+  }, [initialQuery, fetchPage, debouncedFetch])
+
+  function onSearchChange(v) {
     setQuery(v)
-    debouncedFetch(v)
+    setPage(1)
+    debouncedFetch(v, 1)
   }
 
-  const onPageChange = (p) => {
+  function onPageChange(p) {
     setPage(p)
-    fetch(query || initialQuery, p)
+    fetchPage(query, p)
   }
 
   return {
