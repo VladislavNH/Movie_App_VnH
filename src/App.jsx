@@ -28,10 +28,8 @@ export default function App() {
         <Tabs defaultActiveKey="1" centered>
           <TabPane tab="Search" key="1">
             <SearchBar value={query} onChange={onSearchChange} />
-
-            <MoviesGrid loading={loading} error={error} movies={movies} />
-
-            {!loading && !error && movies.length > 0 && (
+              <MoviesGrid loading={loading} error={error} movies={movies} />
+                  {!loading && !error && movies.length > 0 && (
               <PaginationControl
                 page={page}
                 total={totalResults}
@@ -39,7 +37,6 @@ export default function App() {
               />
             )}
           </TabPane>
-
           <TabPane tab="Rated" key="2">
             <RatedTab />
           </TabPane>
